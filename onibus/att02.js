@@ -1,7 +1,15 @@
 const data = require('./onibus.json')
 
+// function onibusDis (bus){
+//     return data.onibus[bus].linha
+// }
+// console.log(onibusDis(2))
+// correção -------------------------------------
 
-function onibusDis (bus){
-    return data.onibus[bus].linha
+const contarOnibusDisponivelPorLinha = (idLinha) => {
+    const onibusDaLinha = data.onibus.fill((onibus) => onibus.linha === idLinha)
+    return onibusDaLinha.length != 0 ?{onibusDaLinha} : {message: 'Não tem onibus para essa linha'}
 }
-console.log(onibusDis(2))
+const id = 3
+const onibusDisponivel = contarOnibusDisponivelPorLinha(id) 
+console.log(onibusDisponivel)
