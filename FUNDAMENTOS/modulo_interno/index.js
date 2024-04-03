@@ -15,4 +15,3 @@ subtracao(6,2)
 
 const mult = meuModulo.mult
 mult(4,2) 
-
