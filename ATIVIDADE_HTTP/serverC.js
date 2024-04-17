@@ -11,7 +11,11 @@ const server = http.createServer((request, response )=>{
         response.setHeader('Content-Type', 'application/json')
         response.end(JSON.stringify(participants))
     }else if(url === "/participants/count" && method === 'GET'){
-        console.log('GET /participants/count')
+        const quantidadeParticipant = participants.length
+        response.setHeader("Content-Type","application/json")
+        response.end(
+            JSON.stringify({"Quantidade de PArticipantes": quantidadeParticipant})
+        )
     }else if(url === "/participants/count/over18" && method === 'GET'){
         console.log('GET /participants/count/over18')
     }else if(url === "/participants/city/most" && method === 'GET'){
