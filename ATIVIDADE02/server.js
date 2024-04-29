@@ -1,100 +1,81 @@
-import http, { request } from 'node:http'
+import http from 'node:http'
 import fs from 'node:fs'
 
-
 const PORT = 3333
-// titulo, autot. genero, anoPublicacao, [personagens]
+
 const server = http.createServer((request,response)=>{
-   const {url, method}= request
-    try {
-   jsonData = JSON.parse(data)
-    } catch (error){
-        console.log(error)
-    }
-    if(url === '/empregados' && method === 'GET'){
-    response.writeHead(200,{'Content-Type':'application/json'})
-    response.end(JSON.stringify(jsonData))
-    }else if(url === '/empregados' && method === 'POST'){
-    let body = ''
-    request.on('data',(chunk)=>{
-    body += chunk.toString()
-    })
-    request.on('end',()=>{
-        const novoEmpregado = JSON.parse(body)
-         jsonData.length + 1  
-        jsonData.push(novoEmpregado) //Onde //o que vai substituir // caso se de problema
-        fs.writeFile(
-            "livros.json",
-            JSON.stringify(jsonData, null, 2), 
-        (error)=>{
-            if(error){
-                response.writeHead(500,{'Content-Type':'application/json'})
-                response.end(
-                    JSON.stringify({message: "Erro interno do servidor"})
-                );
+   const { method, url}= request
+   
+
+    if(method === 'GET' && url === '/empregados/count'){
+        fs.readFile('funcionarios.json','utf8', (err)=>{
+            if(err){
+                response.writeHead(500, {'Content-Type':'application/json'})
+                response.end(JSON.stringify({message: 'Erro ao ler o arquivo'}))
+            const jsonData = JSON.parse(data)
+            const totalFuncionario = json.length 
+
+            response.writeHead(200,{'Content-Type':'application/json'})
+            response.end(JSONS.stringify({message:`total de funionarios: ${totalFuncionario}`}))
+            } 
+        })
+    }else if(method === 'GET' && url.startsWith( '/empregados/porHabilidade/')){
+        response.writeHead(200,{'Content-Type':'application/json'})
+        response.end(JSONS.stringify(jsonData))
+    }else if(method === 'GET' && url.startsWith('/empregados/porCargo/')){
+        response.writeHead(200,{'Content-Type':'application/json'})
+        response.end(JSONS.stringify(jsonData))
+    }else if(method === 'GET' && url === '/empregados/porFaixaSalarial' ){
+        response.writeHead(200,{'Content-Type':'application/json'})
+        response.end(JSONS.stringify(jsonData))
+    }else if(method === 'GET' && url.startsWith('/empregados/')){
+        const id = parseInt(url.split('/')[2])
+        //localhost:empregados/3
+       fs.readFile('funcionarios.json', 'utf8', (err)=>{
+        if(err){
+            response.writeHead(500, {'Content-Type':'application/json'})
+            response.end(JSON.stringify({message: 'Erro ao ler o arquivo'}))
+        }
+        const jsonData = JSON.parse(data)
+
+        const indexFuncionario = jsonData.findIndex((funcionario)=>funcionario.id === id)
+
+        if(indexFuncionario === -1){
+            response.writeHead(404, {'Content-Type':'application/json'})
+            response.end(JSON.stringify({message: 'Funcionário não encontrado'}))
+        }
+       })
+        
+        response.end()        
+        response.writeHead(200,{'Content-Type':'application/json'})
+        response.end(JSONS.stringify(jsonData))
+    }else if(method === 'POST' && url === '/empregados/'){
+       let body = ''
+       response.on('data', (chunk) =>{
+        body += chunk
+       })
+       response.on('end', ()=>{
+        const novoFuncionario = JSON.parse(body)
+        novoFuncionario.id= jsonData.length + 1
+        jsonData.push(novoFuncionario)
+        
+        fs.writeFile("funcinarios.json", JSON.stringify(novoFuncionario, null, 2), (err) =>{})
+        if(err){
+            if(err) {
+                response.writeHead(500, {'Content-Type':'application/json'})
+                response,end(JSON({message:'Erro interno no Servidor'}))
                 return
             }
-            response.writeHead(201,{'Content-Type': 'application'})
-            response.end(JSON.stringify({novoLivro}))
-        })
-    })
-    }else if(url.startsWith("/empregados") && method === "PUT"){
-    const id = url.split('/')[2]
-let body =''
-request.on('data', (chunk)=>{
-  body+= chunk.toString();
-})
-request.on('end',()=>{
-    const empregadoAutlizado = JSON.parse(body)
-
-    const index = jsonData.findIndex(empregado => empregado.id == id);
-    if(index !== -1){
-     jsonData[index] = {...jsonData[index],...empregadoAutlizado};
-     fs.writeFile("empregado.json", JSON.stringify(jsonData, null, 2),(error)=>{
-        if(error){
-            response.writeHead(500,{'Content-Type':'application/json'})
-            response.end(
-                JSON.stringify({message: "Erro interno do servidor"})
-            );
-            return;
         }
-        response.writeHead(200,{"Content-Type":"application"});
-        response.end(JSON.stringify(jsonData[index]))
-     })
-    }
-});
-
-    console.log(id)
-    response.end()
-    }else if(url.startsWith("/empregado/") && method === "DELETE"){
-    const id = url.split("/")[2]
-    const index = jsonData.findIndex((empregado)=>empregado.id == id);
-    if(index != -1){
-        jsonData.splice(index,1);
-        fs.writeFile(
-            "empregado.json",
-            JSON.stringify(jsonData, null, 2),
-            (error) =>{
-                if(error){
-                    response.writeHead(500,{'Content-Type':'application/json'})
-                    response.end(
-                        JSON.stringify({message: "Erro interno do servidor"})
-                    );
-                    return
-                }
-                response.writeHead(200, {'Content-Type':'application/json'})
-                response.end(
-                    JSON.stringify({message:"empregado removido com sucesso"}))
-            }
-            )
+        })
+    }else if(method === 'PUT' && url.startsWith('/empregados/')){
+        response.writeHead(200,{'Content-Type':'application/json'})
+        response.end(JSONS.stringify(jsonData))
+    }else if(method === 'DELETE' && url.startsWith('/empregados/')){
+        
     }else{
-        response.writeHead(404,{'Content-Type':'application.js'})
-        response.end(JSON.stringify({message:"Página não encontrada"}))
-    }
-
-    }else{
-        response.writeHead(404,{'Content-Type':'application.js'})
-        response.end(JSON.stringify({message:"Página não encontrada"}))
+        response.write(404, {'Content-Type':'application'});
+        response.end(JSON.stringify({message: "Não encontrado"}))
     }
    })
 
