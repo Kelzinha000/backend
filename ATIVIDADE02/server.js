@@ -1,31 +1,41 @@
 import http from 'node:http'
 import fs from 'node:fs'
 import {URLSearchParams} from 'node:url'  // importando somente um objeto
+import lerDadosFuncionarios from './funcionarios'
+import cadastrarFuncionario from './cadastrarFuncionarios'
 
 const PORT = 3333
+
+// atribuindo essa função para todas as rotas 
+fs.readFile("funcionarios.json","uft8",(err, data)=>{
+    const {method, url} = request;
+    //CORS 
+    response.setHeader()
+})
+fs.writeHead("")
 
 const server = http.createServer((request,response)=>{
    const { method, url}= request
    
+// empregados/count > empregados
+    if(method === 'GET' && url === '/empregados'){
+      lerDadosFuncionarios((err, funcionarios)=>{
+        if(err){
 
-    if(method === 'GET' && url === '/empregados/count'){
-        fs.readFile('funcionarios.json','utf8', (err)=>{
-            if(err){
-                response.writeHead(500, {'Content-Type':'application/json'})
-                response.end(JSON.stringify({message: 'Erro ao ler o arquivo'}))
-            const jsonData = JSON.parse(data)
-            const totalFuncionario = json.length 
-
-            response.writeHead(200,{'Content-Type':'application/json'})
-            response.end(JSON.stringify({message:`total de funionarios: ${totalFuncionario}`}))
-            } 
-        })
+            response.writeHead(500,{"Content-Type":"application/json"})
+            response.end(JSON.stringify(funcionarios))
+        }
+        response.writeHead(200,{"Content-Type":"application/json"})
+        response.end(JSON.stringify(funcionarios))
+      })
+           
+        
     }else if(method === 'GET' && url.startsWith( '/empregados/porHabilidade/')){
     const cargo = url.split("/")[3];
-    fs.readFile("funcionarios.json","utf8",(err, data)=>{
+    lerDadosFuncionarios((err, funcionarios)=>{
         if(err){
-            response.writeHead(500, {"Content-Type":"application/json"})
-            response.end(JSON.stringify({message: "Errro ao ler arquivo"}))
+            response.writeHead(500,{"Content-Type":"application/json"})
+            response.end(JSON.stringify(funcionarios))
         }
         const jsonData = JSON.parse(data)
         const funcionariosPorHabilidade = jsonData.filter(
@@ -37,21 +47,19 @@ const server = http.createServer((request,response)=>{
             response.end(JSON.stringify(funcionarioPorCargo))
         }
     })
-    
     }else if(method === 'GET' && url.startsWith('/empregados/porCargo/')){
        fs.readFile('funcionarios.json','utf8',(err, data)=>{
         if(err){
             response.writeHead(500,{"Content-Type":"application/json"});
             response.end(JSON.stringify({message:"Erro ao ler arquivo "}))
-       
+
        }
         const jsonData =  JSON.parse(data)
 
         const funcionarioPorCargo = jsonData.filter(
             (funcionario) => funcionario.cargo === cargo
         )
-
-       }
+       })
     }else if(method === 'GET' && url === '/empregados/porFaixaSalarial' ){
         const urlParams = new URLSearchParams(url.split('?')[1])
         const minSalario = urlParams.get("minSalario")
@@ -60,9 +68,9 @@ const server = http.createServer((request,response)=>{
         if(err){
             response.writeHead(500,{"Content-Type":"application/json"});
             response.end(JSON.stringify({message:"Erro ao ler arquivo "}))
-       
+
        }
-        const jsonData =  JSON.parse(data)
+        const jsonData = JSON.parse(data)
        
        const funcionarioPorFaixaSalarial = jsonData.filter(
         (funcionario)=>
@@ -103,7 +111,6 @@ const server = http.createServer((request,response)=>{
             response.end(JSON.stringify({message: 'Funcionário não encontrado'}))
         }
        })
-        
         response.end()        
         response.writeHead(200,{'Content-Type':'application/json'})
         response.end(JSON.stringify(jsonData))
@@ -117,15 +124,17 @@ const server = http.createServer((request,response)=>{
         novoFuncionario.id= jsonData.length + 1
         jsonData.push(novoFuncionario)
         
-        fs.writeFile("funcinarios.json", JSON.stringify(novoFuncionario, null, 2), (err) =>{})
+        fs.writeFile("funcinarios.json", JSON.stringify(novoFuncionario, null, 2), (err) =>{
         if(err){
             if(err) {
                 response.writeHead(500, {'Content-Type':'application/json'})
                 response,end(JSON({message:'Erro interno no Servidor'}))
                 return
-            }
-        }
-        })
+           
+            }    
+         }
+       })
+    })
     }else if(method === 'PUT' && url.startsWith('/empregados/')){
       const id = parseInt(url.split('/')[2])
 
@@ -134,7 +143,7 @@ const server = http.createServer((request,response)=>{
         body += chunk
       })
       request.on('end',()=>{
-        fs.writeFile("funcinarios.json", JSON.stringify(novoFuncionario, null, 2), (err) =>{
+        fs.writeFile("funcinarios.json",JSON.stringify(novoFuncionario, null, 2), (err) =>{
      
             if(err) {
                 response.writeHead(500, {'Content-Type':'application/json'})
@@ -161,15 +170,14 @@ const server = http.createServer((request,response)=>{
                     return
                 }
                 response.writeHead(200,{'Content-Type':'application/json'})
-                response.end(JSON
-                    .stringify(funcionaioAtualizado))
+                response.end(JSON.stringify(funcionarioAtualizado))
             })
         })
         
       })
     }else if(method === 'DELETE' && url.startsWith('/empregados/')){
         const id = url.split('/')[2]
-        fs.readFile("funcionarios.json", "uft8", (err,data)=>{
+      
             if(err){
                 response.writeHead(404, {'Content-Type':'application/json'})
                 response,end(JSON({message:'funcionario não encontrado'}))
@@ -179,9 +187,9 @@ const server = http.createServer((request,response)=>{
             
             if(indexFuncionario === -1){
                 response.writeHead(404, {'Content-Type': 'application/json'})
-                response.end(JSON.stringify({message:'Funcionario não encontrado!'}))
+                response.end(JSON.stringify({message:'Funcionário não encontrado!'}))
             }
-        })
+        
     }else{
         response.write(404, {'Content-Type':'application'});
         response.end(JSON.stringify({message: "Não encontrado"}))
