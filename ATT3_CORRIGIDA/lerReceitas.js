@@ -14,3 +14,5 @@ const lerDadosReceitas = (callback)=>{
   }
 
   export default lerDadosReceitas;
+
+  // essa função ler os dados, essa função sempre vai ser um array de objetos

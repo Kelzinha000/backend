@@ -97,7 +97,45 @@ const server = createServer((request, response)=>{
             response.end()
         })
      }else if (method === "DELETE" && url.startsWith('/receitas/')){// deletar
-        response.end(method, url)
+        console.log(method,url)
+        const id = parseInt(url.split('/')[2])
+        lerDadosReceitas((err,receitas)=>{
+            if(err){
+                response.writeHead(500,{"Content-Type":"application/json"})
+                response.end(
+                    JSON.stringify({message:"erro a ler dados da receita"})
+                );
+                return /// serv para parar a execu~ção 
+            } // vai passar pelo elementos do array e mostrar, se tiver ele pega. Ta procurando o indices dessas receitas
+            const indexReceita = receitas.findIndex((receita)=>receita.id ===id)
+            if(indexReceita === -1){
+                response.writeHead(404,{"Content-Type":"application/json"})
+                response.end(
+                    JSON.stringify({message:"Erro não encontrada"})
+                )
+                return /// serv para parar a execu~ção 
+            }
+            receitas.splice(indexReceita,1)
+            fs.writeFile("receitas.json",JSON.stringify(receitas,null,2),
+            (err)=>{
+              if(err){
+                response.writeHead(500,{"Content-Type":"application/json"})
+                response.end(
+                 JSON.stringify({
+                    message:"Erro a deletear da receita no Banco de dados",
+              })
+              )
+              return
+            }
+              response.writeHead(200,{"Content-Type":"application/json"})
+              response.end(JSON.stringify({message:"Receita excluida"}))
+
+            })
+            console.log(receitas)
+            console.log(indexReceita)
+            response.end(method)
+        });
+
      }else if (method === "GET" && url.startsWith('/receitas/')){// Listar Uma Receita
         response.end(method)
      }else if (method === "GET" && url.startsWith('/categorias/')){
@@ -105,16 +143,41 @@ const server = createServer((request, response)=>{
         response.end(method)
      }else if (method === "GET" && url.startsWith('/busca')){// Buscar por Receita
          //localhost:3333/busca?termo=Pratos%20Principais
+         const urlParam = new URLSearchParams(url.split("?")[1])
+         console.log(urlParam.get('termo'))
+         lerDadosReceitas((err, receitas)=>{
+            if(err){
+                response.writeHead(500,{"Content-Type":"application/json"})
+                response.end(
+                 JSON.stringify({message:"Erro a deletear da receita no Banco de dados"})
+                 );
+                 return
+            }
+            // busca receita, ingredientes ou qualquer termo.
+            const resultadoBusca = "GET" = receitas.filter((receita)=>{
+                receita.nome.includes(termo) ||
+                receita.categoria.includes(termo) ||
+                receita.ingredientes.some((ingrediente)=>ingrediente.includes(termo)
+                )
+              if(resultadoBusca.length === 0){
+                response.writeHead(200,{"Content-Type":"application/json"})
+                response.end(JSON.stringify(resultadoBusca));
+              }
+            }
+            )
+         })
+    
         response.end(method)
      }else if (method === "GET" && url.startsWith('/ingredientes')){ // listar todos os ingredientes
-        //localhost:3333/ingredientes
+        //localhost:3333/ingredientes/pesquisa=cebola
+        // trazer todas as receitas que possua esse ingrediente 
+
        response.end(method)
     }else{
         response.writeHead(404,{'Content-Type':'application/json'})
         response.end(JSON.stringify({message:'Rota não encontrada'}))
     }
 })
-//é funca
 server.listen(PORT,()=>{
     console.log(`Servidor on PORT: ${PORT}`)
 })

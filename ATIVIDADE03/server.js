@@ -1,5 +1,6 @@
 import http from 'node:http'
 import fs from 'node:fs'
+import { URLSearchParams } from 'node:url'
 
 const PORT = 3333
 let  receitas= []
@@ -18,10 +19,13 @@ const server = http.createServer((request, response)=>{
     })
     }else if(method === "GET" && url( '/categorias')){
 
-    }else if(method === "GET" && url( '/busca')){
+    }else if(method === "GET" && url.startsWith(( '/busca'))){
+        //localhost:3333/busca/
+     const urlParam = new URLSearchParams(url.split("?")[1])
+     console.log(urlParam.get('termo'))
 
-    }else if(method === "GET" && url( '/ingredientes')){
-
+    }else if(method === "GET" && url.startsWith(( '/ingredientes'))){
+     
     }else if(method === "POST" && url.startsWith( '/receitas')){
      let body =''
      response.on('data', (chunk) =>{
@@ -81,7 +85,6 @@ const server = http.createServer((request, response)=>{
 }
     }
 )
-
 server.listen(PORT, ()=>{
  console.log(`Servidor on PORT ${PORT}`)
 })
