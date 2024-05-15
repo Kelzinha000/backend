@@ -1,120 +1,99 @@
-import {createServer}from 'node:http'
+import http, { createServer } from 'node:http'
 import fs from 'node:fs'
-import {URLSearchParams} from 'node:url'
+import formidable from 'formidable';
 
-import lerDadosReceitas from './lerReceitas.js'
-const PORT = 3333 // buscar informações do servidor
 
+const lerDadosUsuarios = (callback) =>{ 
+    fs.readFile("usuarios.json","uft8",(err,data)=>{
+    if(err){
+     callback(err);
+    }
+    try {
+     const usuarios= JSON.parse(data); 
+     callback(null, usuarios); 
+    } catch (error) {  
+     callback(error);
+    }
+    });
+  };
+
+  export default lerDadosUsuarios;
+
+const PORT = 3333
+
+let usuarios = []
 
 const server = createServer((request, response)=>{
-     const {method, url} = request  
-     // criar rotas
-     if(method === "GET" && url === '/receitas'){ // listar
-       // fs.readFile('aqui esta o arquivp.json','utf8', callback)
-       lerDadosReceitas((err, receitas)=>{
-        if(err){
-            response.writeHead(500,{"Content-Type":"application/json"})
-            response.end(JSON.stringify({message:"Erro ao ler os dados das receitas"}))
+const {method, url} = request
+
+
+if(method === 'GET' && url.startsWith('/perfil/')){
+    const perfilId = url.split('/')[2]
+    const perfilFind = perfis.find((perfil)=>{
+    return perfil.id == perfilId 
+    })
+}if(method === 'GET' && url.startsWith('/usuarios')){
+response.writeHead(200,{"Content-Type":"application/json"})
+response.end(JSON.stringify(usuarios))
+}if(method === 'POST' && url.startsWith('/login')){
+    
+}else if(method === 'POST' && url === '/usuarios'){
+    let body = ''
+    request.on('data', (chunk)=>{
+         body += chunk
+    })
+    request.on('end',()=>{
+        if(!body){
+            response.writeHead(400, {'Content-Type':'application/json'})
+            response.end(JSON.stringify({message:'Corpo da solicitação vazio'}))
         }
-            response.writeHead(200,{"Content-Type":"application/json"})
-            response.end(JSON.stringify(receitas))
-          
-       });
-     }else if (method === "POST" && url === '/receitas'){ //Cadastrar
-        let body = ''
-        request.on('data', (chunk )=>{
-            body += chunk
-        })
-        request.on('end',()=>{
-            if(!body){
-                response.writeHead(400,{'Content-Type':'application/json'})
-                response.end(JSON.stringify({message:'Corpo da solicitação vazio'}))
-                return
-            }
-            const novaReceita = JSON.parse(body)
-            lerDadosReceitas((err,receitas)=>{
-                if(err){
-                    response.writeHead(500,{"Content-Type":"application/json"})
-                    response.end(JSON.stringify({message:"Erro ao ler receita"}))
-                    return
-                }
-                novaReceita.id = receitas.length + 1
-                receitas.push(novaReceita)
 
-                fs.writeFile('receitas.json', JSON.stringify(receitas,null, 2), (err)=>{
-                    if(err){
-                        response.writeHead(500,{'Content-Type':'application/json'})
-                        response.end((JSON.stringify({message:'Erro a ler dados da receita'})))
-                    }
-                    response.writeHead(201,{'Content-Type':'application/json'})
-                        response.end(JSON.stringify(novaReceita))
-                })
-            })
         
-            response.end()
-        })
-     }else if (method === "PUT" && url.startsWith('/receitas/')){ // atualizar
-        const id = parseInt(url.split('/')[2])
-        let body = ''
-        request.on('data',(chunk)=>{
-            body += chunk
-        })
-        request.on('end',()=>{
-            if(!body){
-                response.writeHead(400, {'Content-Type':'application/json'})
-                response.end(JSON.stringify({message:'Corpo da solicitação vazio'}))
-                return
+        const novoUsuario = JSON.parse(body)
+        lerDadosUsuarios((err,usuarios)=>{
+
+            if(err){
+            response.writeHead(500, {'Content-Type':'application/json'})
+            response.end(JSON.stringify({message : 'Erro ao cadastrar a usuario'}))
+            return
             }
-            lerDadosReceitas((err, receitas)=>{
+            novoUsuario.id = usuarios.length + 1
+            usuarios.push(novoUsuario)
+                                                                  
+            fs.writeFile('usuarios.json', JSON.stringify(usuarios, null, 2),(err)=>{
                 if(err){
-                    response.writeHead(500,{'Content-Type':'application/json'})
-                    response.end(JSON.stringify({message:'Erro a ler dados da receita'}))
-                }
-                const indexReceita = receitas.findIndex((receita)=>receita.id === id)
-                if(indexReceita === -1){
-                    response.writeHead(404,{'Content-Type':'application/json'})
-                    response.end(JSON.stringify({message:'Receita não encontrada'}))
+                    response.writeHead(500, {'Content-Type':'application/json'})
+                    response.end(JSON.stringify({message :'Erro ao cadastrar a usuario no arquirvo'}))
                     return
                 }
-
-                const receitaAtualizada = JSON.parse(body)
-                receitaAtualizada.id = id
-                receitas[indexReceita]= receitaAtualizada
-
-                fs.writeFile('receitas.json', JSON.stringify(receitas, null, 2), (err)=>{
-                    if(err){
-                        response.writeHead(500,{'Content-Type':'application/json'})
-                        response.end(JSON.stringify({message:"Não é possível atualizar receita"}))
-                        return
-                    }
-                    response.writeHead(201,{'Content-Type':'application/json'})
-                    response.end(JSON.stringify(receitaAtualizada))
-                })
+                response.writeHead(201, {'Content-Type':'application/json'})
+                response.end(JSON.stringify(novoUsuario))
             })
-            
 
-            console.log(indexReceita)
-            response.end()
         })
-     }else if (method === "DELETE" && url.startsWith('/receitas/')){// deletar
-        response.end(method, url)
-     }else if (method === "GET" && url.startsWith('/receitas/')){// Listar Uma Receita
-        response.end(method)
-     }else if (method === "GET" && url.startsWith('/categorias/')){
-        //localhost:3333/categorias/saladas
-        response.end(method)
-     }else if (method === "GET" && url.startsWith('/busca')){// Buscar por Receita
-         //localhost:3333/busca?termo=Pratos%20Principais
-        response.end(method)
-     }else if (method === "GET" && url.startsWith('/ingredientes')){ // listar todos os ingredientes
-        //localhost:3333/ingredientes
-       response.end(method)
-    }else{
-        response.writeHead(404,{'Content-Type':'application/json'})
-        response.end(JSON.stringify({message:'Rota não encontrada'}))
+        response.end()
+    })
     }
+if(method === 'POST' && url.startsWith('/perfil/imagem')){
+    if(request === '/perfil/imagem/')
+}if(method === 'PUT' && url.startsWith('/perfil')){
+    let body = ''
+    request.on('data',(chunk)=>{
+        body += chunk.toString()
+    })
+
+    request.on("end", ()=>{
+        fs.writeFile("usuarios.json", JSON.stringify(usuarios, null, 2),(err)=>{
+            if(err){
+                response.writeHead(500,{'Content-Type':'application/json'})
+                response.end(JSON({message:'Erro interno no servidor'}))
+                return
+            }
+        })
+    })
+}
 })
-//é funca
-server.listen(PORT,()=>{
-    console.log(`Servidor on PORT: ${PORT}`)
+
+server.listen(PORT, ()=>{
+    console.log(`Servidor on PORT ${PORT}`)
 })
